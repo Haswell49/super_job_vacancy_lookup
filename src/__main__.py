@@ -17,7 +17,8 @@ def authorize() -> Response:
     params = {"login": config.LOGIN,
               "password": config.PASSWORD,
               "client_id": config.CLIENT_ID,
-              "client_secret": config.CLIENT_SECRET}
+              "client_secret": config.CLIENT_SECRET,
+              "state": ""}
 
     response = requests.get(url, params=params)
 
@@ -29,23 +30,24 @@ def authorize() -> Response:
     return response.json()
 
 
-def get_vacancy(session: Session, vacancy_id: str):
-    url = f"{API_URI}/vacancies/{vacancy_id}"
+def get_vacancies(session: Session):
+    url = f"{API_URI}/vacancies/"
 
-    response = session.get(url, headers={"X-Api-App-Id": config.CLIENT_SECRET})
+    response = session.get(url, headers={"X-Api-App-Id": config.CLIENT_SECRET,
+                                         "Authorization": f"Bearer {session.access_token}"})
 
     return response.json()
 
 
 def main():
-    auth_data = authorize()
+    auth_response = authorize()
 
     client = BackendApplicationClient(client_id=config.CLIENT_ID)
     session = OAuth2Session(client=client)
 
-    session.access_token = auth_data["access_token"]
+    session.access_token = auth_response["access_token"]
 
-    vacancy_data = get_vacancy(session, "46565005")
+    vacancy_data = get_vacancies(session)
 
     pprint(vacancy_data)
 
